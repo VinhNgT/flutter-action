@@ -32,6 +32,31 @@ not_found_error() {
 	echo "Unable to determine Flutter version for channel: $1 version: $2 architecture: $3"
 }
 
+print_all_variables() {
+	echo "RUNNER_OS=$RUNNER_OS"
+	echo "RUNNER_ARCH=$RUNNER_ARCH"
+	echo "RUNNER_TOOL_CACHE=$RUNNER_TOOL_CACHE"
+
+	echo "OS_NAME=$OS_NAME"
+	echo "ARCH_NAME=$ARCH_NAME"
+	echo "MANIFEST_BASE_URL=$MANIFEST_BASE_URL"
+	echo "MANIFEST_JSON_PATH=$MANIFEST_JSON_PATH"
+	echo "MANIFEST_URL=$MANIFEST_URL"
+
+	echo "CACHE_PATH=$CACHE_PATH"
+	echo "CACHE_KEY=$CACHE_KEY"
+	echo "PUB_CACHE_PATH=$PUB_CACHE_PATH"
+	echo "PUB_CACHE_KEY=$PUB_CACHE_KEY"
+	echo "PRINT_ONLY=$PRINT_ONLY"
+	echo "TEST_MODE=$TEST_MODE"
+	echo "ARCH=$ARCH"
+	echo "VERSION=$VERSION"
+	echo "VERSION_FILE=$VERSION_FILE"
+
+	echo "ARR_CHANNEL=${ARR_CHANNEL[*]}"
+	echo "CHANNEL=$CHANNEL"
+}
+
 transform_path() {
 	if [ "$OS_NAME" = windows ]; then
 		echo "$1" | sed -e 's/^\///' -e 's/\//\\/g'
@@ -81,24 +106,55 @@ VERSION_FILE=""
 
 while getopts 'tc:k:d:l:pa:n:f:' flag; do
 	case "$flag" in
-	c) CACHE_PATH="$OPTARG" ;;
-	k) CACHE_KEY="$OPTARG" ;;
-	d) PUB_CACHE_PATH="$OPTARG" ;;
-	l) PUB_CACHE_KEY="$OPTARG" ;;
-	p) PRINT_ONLY=true ;;
-	t) TEST_MODE=true ;;
-	a) ARCH="$(echo "$OPTARG" | awk '{print tolower($0)}')" ;;
-	n) VERSION="$OPTARG" ;;
+	c)
+		CACHE_PATH="$OPTARG"
+		echo "CACHE_PATH set to $CACHE_PATH"
+		;;
+	k)
+		CACHE_KEY="$OPTARG"
+		echo "CACHE_KEY set to $CACHE_KEY"
+		;;
+	d)
+		PUB_CACHE_PATH="$OPTARG"
+		echo "PUB_CACHE_PATH set to $PUB_CACHE_PATH"
+		;;
+	l)
+		PUB_CACHE_KEY="$OPTARG"
+		echo "PUB_CACHE_KEY set to $PUB_CACHE_KEY"
+		;;
+	p)
+		PRINT_ONLY=true
+		echo "PRINT_ONLY set to true"
+		;;
+	t)
+		TEST_MODE=true
+		echo "TEST_MODE set to true"
+		;;
+	a)
+		ARCH="$(echo "$OPTARG" | awk '{print tolower($0)}')"
+		echo "ARCH set to $ARCH"
+		;;
+	n)
+		VERSION="$OPTARG"
+		echo "VERSION set to $VERSION"
+		;;
 	f)
 		VERSION_FILE="$OPTARG"
+		echo "VERSION_FILE set to $VERSION_FILE"
 		if [ -n "$VERSION_FILE" ] && ! check_command yq; then
 			echo "yq not found. Install it from https://mikefarah.gitbook.io/yq"
 			exit 1
 		fi
 		;;
-	?) exit 2 ;;
+	?)
+		echo "Invalid option: -$flag"
+		exit 2
+		;;
 	esac
 done
+
+# echo "VERSION=$VERSION"
+# echo "PUB_CACHE_PATH=$PUB_CACHE_PATH"
 
 [ -z "$ARCH" ] && ARCH="$ARCH_NAME"
 
@@ -121,6 +177,8 @@ CHANNEL="${ARR_CHANNEL[0]:-}"
 [ -z "$CACHE_KEY" ] && CACHE_KEY="flutter-:os:-:channel:-:version:-:arch:-:hash:"
 [ -z "$PUB_CACHE_KEY" ] && PUB_CACHE_KEY="flutter-pub-:os:-:channel:-:version:-:arch:-:hash:"
 [ -z "$PUB_CACHE_PATH" ] && PUB_CACHE_PATH="default"
+
+# print_all_variables
 
 # `PUB_CACHE` is what Dart and Flutter looks for in the environment, while
 # `PUB_CACHE_PATH` is passed in from the action.
